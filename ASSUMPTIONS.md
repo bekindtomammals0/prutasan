@@ -30,3 +30,15 @@ Assumption: Pending outbox domain events are delivered to an internal applicatio
 Reason:  The assignment requires at-least-once delivery but does not specify an
 external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
 Needs confirmation: Yes.
+
+## Frontend behavior
+Assumptions: The frontend is a minimal single-page interface for listing, creating,
+updating, deleting, storing, and removing fruits.
+Reason: No detailed frontend acceptance criteria are provided. The frontend should therefore be a thin interface demonstrating the backend domain behavior.
+Needs confirmation: No.
+
+## RESTfulness
+Assumptions: The REST API initially exposes conventional CRUD operations for the Fruit resource. Store and remove are domain commands rather than CRUD operations,
+so they are exposed through GraphQL only unless API consistency is required.
+Reason: The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Store and remove are business commands rather than direct field updates, but REST can expose them through dedicated command endpoints if feature consistency is expected. Both GraphQL and REST would call the same application use cases.
+Needs confirmation: Yes.

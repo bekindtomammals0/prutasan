@@ -35,6 +35,7 @@ Establish a common language for Fruit Storage between domain expert and develope
 ## Aggregate Model
 
 Fruit is the aggregate root.
+
 It owns: 
 - Fruit Name
 - Fruit Description
@@ -48,6 +49,8 @@ All changes to these values occur through Fruit operations.
 - FruitCreated
 - FruitUpdated
 - FruitDeleted
+- FruitStored
+- FruitRemoved
 
 ## Open Questions
 

@@ -1,116 +1,79 @@
+# Fruit Storage Assumptions
+
 ## Purpose
 
 This document records the developer's assumptions according to app requirements. Some assumptions require confirmation before proceeding to next stage of software development.
 
 ## Fruit name uniqueness 
 
-### Assumptions: 
+**Assumptions**: Names are compared as case-insensitive after trimming (normalized)
 
-Names are compared as case-insensitive after trimming
-### Reason: 
-
-The strings "Lemon", "lemon", and " LeMon " are the same and should not create three definitions for the same fruit.
-
-### Needs confirmation: 
-
-Yes.
+**Reason**: The strings "Lemon", "lemon", and " LeMon " are the same and should not create three definitions for the same fruit.
 
 ## Character limit
 
-### Assumptions: 
+**Assumptions**: Character limit mentioned "30 letters", this is standardized to 30 characters including spaces in the count. 
 
-Character limit mentioned "30 letters", this is standardized to 30 characters including spaces in the count. 
-
-### Reason: 
-
-Standard practice for database fields include storing whitespaces. Input validation length function also includes whitespace in its count.
-
-### Needs confirmation: 
-
-No.
+**Reason**: Standard practice for database fields include storing whitespaces. Input validation length function also includes whitespace in its count.
 
 ## Zeros or negative storage limit
 
-### Assumptions: 
+**Assumptions**: Fruit cannot be created with negative storage limit. Zero or more storage limit is allowed on initialization.
 
-Fruit cannot be created with negative storage limit. Zero or more storage limit is allowed on initialization.
-
-### Reason: 
-
-Creating the fruit can start at zero storage limit, but amount removed and added from the fruit storage should always be greater than zero if storage limit permits, never negative.
-
-### Needs confirmation: 
-
-Yes.
+**Reason**: Creating the fruit can start at zero storage limit, but amount removed and added from the fruit storage should always be greater than zero if storage limit permits, never negative.
 
 ## Reducing storage limit less than stored amount
 
-### Assumption: 
+**Assumption**: Updating the storage limit to be less than the quantity stored will reject update request.
 
-Updating the storage limit to be less than the quantity stored will reject update request.
+**Reason**: Removing the excess amount from the fruit storage should come first before updating storage limit.
 
-### Reason: 
-
-Removing the excess amount from the fruit storage should come first before updating storage 
-limit.
-
-### Needs confirmation: 
-
-Yes.
+**Needs confirmation**: Yes.
 
 ## Force-deletion soft-deletes fruit data
 
-### Assumption: 
+**Assumption**: Force deleting stored fruit definition and amount will soft-delete the entire fruit data.
 
-Force deleting stored fruit definition and amount will soft-delete the entire fruit data.
+**Reason**: This retains historical data, allowing retrieval of mistaken deletes. Purely destructive actions will be harder for the user to work around the application safely.
 
-### Reason: 
-
-This retains historical data, allowing retrieval of mistaken deletes. Purely destructive actions will be harder for the user to work around the application safely.
-
-### Needs confirmation: 
-
-Yes.
+**Needs confirmation**: Yes.
 
 ## Domain events
 
-### Assumption: 
+**Assumption**: Pending outbox domain events are delivered to an internal application event bus through a transactional outbox publisher (audit handler).
 
-Pending outbox domain events are delivered to an internal application event bus through a transactional outbox publisher (audit handler).
+**Reason**:  The assignment requires at-least-once delivery but does not specify an external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
 
-### Reason:  
-
-The assignment requires at-least-once delivery but does not specify an external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
-
-### Needs confirmation: 
-
-Yes.
+**Needs consideration**: Delay, fault tolerance.
 
 ## Frontend behavior
 
-### Assumptions: 
-
-The frontend is a minimal single-page interface for listing, creating,
+**Assumptions**: The frontend is a minimal single-page interface for listing, creating,
 updating, deleting, storing, and removing fruits.
 
-### Reason: 
-
-No detailed frontend acceptance criteria are provided. The frontend should therefore be a thin interface demonstrating the backend domain behavior.
-
-### Needs confirmation: 
-
-No.
+**Reason**: No detailed frontend acceptance criteria are provided. The frontend should therefore be a thin interface demonstrating the backend domain behavior.
 
 ## RESTfulness
 
-### Assumptions: 
+**Assumptions**: REST and GraphQL expose the same command endpoints: CRUD, Store, and Remove.
 
-The REST API initially exposes conventional CRUD operations for the Fruit resource. Store and remove are domain commands rather than CRUD operations, so they are exposed through GraphQL only unless API consistency is required.
+**Reason**: The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Even when store and remove are business commands rather than direct field updates, REST can expose them through dedicated command endpoints for feature consistency. Both GraphQL and REST would call the same application use cases. 
 
-### Reason: 
+## Fruit creation requires complete input
 
-The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Store and remove are business commands rather than direct field updates, but REST can expose them through dedicated command endpoints if feature consistency is expected. Both GraphQL and REST would call the same application use cases.
+Creating a fruit requires `name`, `description`, and `limitOfFruitToBeStored`. No creation field receives a default value.
 
-### Needs confirmation: 
+Unlike creation, updating a fruit supports partial modification: omitted mutable fields preserve their current values.
 
-Yes.
+## Partial fruit updates
+
+**Decision**: `updateFruitForFruitStorage` supports partial updates.
+
+When `limitOfFruitToBeStored` is omitted, the current limit is preserved.
+An explicit null value is invalid. An explicit integer is treated as a
+requested replacement and is validated against the current stored amount.
+
+**Reason**: The supplied acceptance test describes updating only the fruit
+description, even though the mutation signature also lists the storage limit.
+
+**Needs confirmation**: Yes.

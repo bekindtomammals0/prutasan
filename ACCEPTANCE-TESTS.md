@@ -21,7 +21,7 @@ When a fruit is created with:
 - description = "this is a lemon"
 - limitOfFruitToBeStored = 10
 Then a fruit named "lemon" exists
-And its description contains "this is a lemon"
+And its description is "this is a lemon"
 And its storage limit is 10
 And its stored amount is 0
 And a FruitCreated domain event is recorded
@@ -33,8 +33,8 @@ And a FruitCreated domain event is recorded
 Given no fruit named "lemon" exists
 When a fruit is created with:
 - name = "lemon"
-- description = "fruit with a very long description"
-- limitOfFruitToBeStore = 10
+- description = "this is a fruit with a very long description"
+- limitOfFruitToBeStored = 10
 Then the fruit creation fails with a fruit description length validation error
 And no fruit named "lemon" is created
 And no FruitCreated domain event is recorded
@@ -46,7 +46,7 @@ And no FruitCreated domain event is recorded
 Given a fruit named "lemon" already exists
 When another fruit named "lemon" is created
 Then the creation fails with a duplicate-name error
-And no duplicated fruit named "lemon" exists
+And exactly one fruit named "lemon" exists
 And no additional FruitCreated domain event is recorded
 
 ### Command `**updateFruitForFruitStorage**`
@@ -81,7 +81,7 @@ Given a fruit exists with:
 - storedAmount = 0
 When updateFruitForFruitStorage is called with:
 - name = "lemon"
-- description = "updated lemon description with a long description"
+- description = "updated lemon with a long description"
 - limitOfFruitToBeStored = 10
 Then the update fails with a description-length validation error
 And the fruit named "lemon" still has the description "this is a lemon"
@@ -171,11 +171,16 @@ And no FruitUpdated domain event is recorded
 
 ##### Scenario: Reject fruit update with explicitly null storage limit
 
-Given a fruit named "lemon" exists with storage limit 10
-When its description is updated
-And limitOfFruitToBeStored is explicitly null
+Given a fruit named "lemon" exists with:
+- description = "this is a lemon"
+- limitOfFruitToBeStored = 10
+When updateFruitForFruitStorage is called with:
+- name = "lemon"
+- description = "updated lemon description"
+- limitOfFruitToBeStored = null
 Then the updated fails with an invalid-storage-limit error
-And the fruit remains unchanged
+And its description remains "this is a lemon"
+And its storage limit remains 10
 And no FruitUpdated domain event is recorded
 
 #### UPDATE-A07: Empty update
@@ -209,12 +214,22 @@ And no FruitDeleted domain event is recorded
 Given a fruit named "lemon" exists 
 And its stored amount is 5
 When deleteFruitFromFruitStorage is called and forceDelete is true
+Then the delete succeeds
 And the fruit "lemon" no longer exists
 And a FruitDeleted domain event is recorded
 
 ### Additional tests `**deleteFruitFromFruitStorage**`
 
-(TBD)
+#### DELETE-A01: Delete missing fruit
+
+##### Scenario: Reject deleting a fruit that does not exist
+
+Given no fruit named "lemon" exists
+And a fruit named "apple" exists
+When deleteFruitFromFruitStorage is called for "lemon"
+Then the deletion fails with a FruitNotFound error
+And the fruit named "apple" still exists
+And no FruitDeleted domain event is recorded
 
 ### Command `**storeFruitToFruitStorage**`
 
@@ -232,7 +247,7 @@ And a FruitStored domain event is recorded
 
 #### STORE-02:  Reject storage exceeding limit
 
-##### Scenario: Reject storing fruit above its storage limit
+##### Scenario: Reject storing fruit greater than storage limit
 
 Given fruit named "lemon" exists
 And its storage limit is 10
@@ -242,15 +257,11 @@ Then the operation fails with exceed-storage-limit error
 And the stored amount remains 0
 And no FruitStored domain event is recorded
 
-### Additional tests `**storeFruitToFruitStorage**`
-
-(TBD)
-
 ### Command `**removeFruitFromFruitStorage**`
 
 #### REMOVE-01: Remove valid amount from storage
 
-##### Scenario: Remove value of fruits if less than stored amount
+##### Scenario: Allow removal when the requested amount equals the stored amount
 
 Given fruit named "lemon" exists
 And its storage limit is 10
@@ -269,12 +280,8 @@ And its storage limit is 10
 And its current stored amount is 5
 When 6 lemons are removed
 Then the operation fails with exceed-stored-amount error
-And the stored amount becomes 5
+And the stored amount remains 5
 And no FruitRemoved domain event is recorded
-
-### Additional tests `**removeFruitFromFruitStorage**`
-
-(TBD)
 
 ### Query `**findFruit**`
 
@@ -282,9 +289,17 @@ And no FruitRemoved domain event is recorded
 
 ##### Scenario: Fruit requested exists
 
-Given fruit named "lemon" exists
+Given a fruit exists with:
+- name = "lemon"
+- description = "this is a lemon"
+- limitOfFruitToBeStored = 10
+- storedAmount = 5
 When a fruit named "lemon" is requested
-Then the fruit object is returned
+Then a fruit is returned with:
+- name = "lemon"
+- description = "this is a lemon"
+- limitOfFruitToBeStored = 10
+- storedAmount = 5
 
 #### FIND-02: Fruit not found
 
@@ -294,3 +309,17 @@ Given no fruit named "not a lemon" exists
 When a fruit named "not a lemon" is requested
 Then the operation fails with a FruitNotFound error
 And no fruit object is returned
+
+### Query `**listFruits**`
+
+#### LIST-01: Return all fruits
+
+**Source**: Derived from Entry Task query requirement
+
+Given the following fruits exist:
+- "lemon"
+- "apple"
+When the list of fruits is requested
+Then the returned list contains "lemon"
+And the returned list contains "apple"
+And the returned list contains exactly 2 fruits

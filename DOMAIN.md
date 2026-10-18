@@ -17,7 +17,7 @@ Establish a common language for Fruit Storage between domain expert and develope
 | *Remove fruit*      | Decrease the stored amount without going below zero. |
 | *Delete fruit*      | Deletes the fruit storage if stored amount is zero, unless force deleted. |
 | *Force delete*      | Deletes fruit storage even with remaining inventory. |
-| *Update fruit*      | Change fruit description and fruit storage limit, as long as limit is above stored amount. |
+| *Update fruit*      | Change fruit description and fruit storage limit. The new storage limit must be greater than or equal to the stored amount. |
 | *Fruit list*        | Returns list of all fruits available. |
 | *Find fruit*        | Return fruit object from list. |
 | *Domain event*      | Record of meaningful domain changes that occurred. |
@@ -54,8 +54,6 @@ All changes to these values occur through Fruit operations.
 
 ## Open Questions
 
-- Are names compared case-insensitively?
 - Does amount represent individual pieces?
 - Can Storage Limit be reduced below Stored Amount?
 - Does force deletion represent discarding the remaining inventory?
-- Can Fruit Name be changed?

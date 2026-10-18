@@ -1,5 +1,6 @@
 # Fruit Storage Use Cases
-## Purpose
+
+## Fruit aggregate
 
 This document defines the application behavior of the fruit storage system independently of any user interface, API protocol, framework, or database.
 
@@ -15,9 +16,9 @@ Create a new type of fruit that can be held by the storage system.
 
 ### Input:
 
-- name
-- description
-- storage limit
+- name - required
+- description - required
+- storage limit - required
 
 ### Preconditions 
 
@@ -60,50 +61,66 @@ Create a new type of fruit that can be held by the storage system.
 Change the description and storage limit of an existing fruit.
 The supplied name identifies the existing fruit. This operation does not rename it.
 
-### Input:
+### Inputs
 
-- existing fruit name
-- new description
-- new storage limit
+- existing fruit name - required
+- new description - optional
+- new storage limit - optional
 
 ### Preconditions
 
 - A fruit with the supplied normalized name exists.
-- The new description is valid.
-- The new storage limit is valid.
-- The new storage limit is not lower than the currently stored amount.
+- At least one mutable field is supplied.
+- If a description is supplied, it contains no more than 30 characters.
+- If a new storage limit is supplied, it should be a non-negative integer.
+- If a new storage limit is supplied, it should be less than or equal to currently stored amount.
+- Neither mutable field is explicitly `null`.
 
 ### Success Flow
 
 1. Normalize and validate the supplied name.
-2. Find the existing fruit by its normalized name.
-3. Validate the new description.
-4. Validate the new storage limit.
-5. Ask the fruit to update its description and storage limit.
-6. Record that the fruit was updated.
-7. Save the updated fruit.
+2. Retrieve the existing fruit by its normalized name.
+3. Verify that at least one mutable field was supplied.
+4. Validate the description if it was supplied.
+5. Validate the storage limit if it was supplied.
+6. Ask the fruit to apply the supplied changes while preserving omitted values.
+7. Record that the fruit was updated.
+8. Save the updated fruit and its `FruitUpdated` event.
+9. Return the updated fruit.
 
 ### Failure Conditions
 
+- The supplied name is empty or invalid.
 - No fruit with the supplied normalized name exists.
-- The description exceeds 30 characters.
-- The storage limit is not a non-negative integer.
-- The new storage limit is lower than the currently stored amount.
+- Both mutable fields are omitted.
+- The description is explicitly null.
+- The supplied description exceeds 30 characters.
+- The storage limit is explicitly null.
+- The supplied storage limit is not a non-negative integer.
+- The supplied storage limit is lower than the currently stored amount.
+- The fruit or its domain event cannot be saved successfully.
 
 ### Outcome
 
 - Returns: the updated fruit.
+- Supplied mutable fields contain their new values.
+- Omitted mutable fields retain their existing values.
+- The fruit name remains unchanged.
+- The internal ID remains unchanged.
+- The stored amount remains unchanged.
 - State change: the fruit has the new description and storage limit.
 - Domain event: `FruitUpdated`.
+- If the operation fails, the fruit remains unchanged and no `FruitUpdated` event is recorded.
 
 ## Use case #3 - Delete Fruit:
 
 ### Command/mutation: 
 
 `deleteFruitFromFruitStorage(name: string, forceDelete: boolean)`
+
 ### Goal
 
-Delete an existing fruit definition from the storage system.
+Delete an existing fruit storage from the system.
 A fruit containing stored inventory can only be deleted when forced deletion is explicitly requested.
 
 ### Input:
@@ -135,8 +152,8 @@ A fruit containing stored inventory can only be deleted when forced deletion is 
 ### Outcome
 
 - Returns: confirmation that the fruit was deleted.
-- State change: the fruit definition no longer exists.
-- If deletion was forced, any remaining stored inventory is discarded with the fruit definition. 
+- State change: the fruit storage no longer exists.
+- If deletion was forced, any remaining stored amount is discarded with the fruit storage. 
 - Domain event: `FruitDeleted`.
 
 ## Use case #4 - Store Fruit:

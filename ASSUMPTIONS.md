@@ -4,18 +4,6 @@
 
 This document records the developer's assumptions according to app requirements. Some assumptions require confirmation before proceeding to next stage of software development.
 
-## Fruit name uniqueness 
-
-**Assumptions**: Names are compared as case-insensitive after trimming (normalized)
-
-**Reason**: The strings "Lemon", "lemon", and " LeMon " are the same and should not create three definitions for the same fruit.
-
-## Character limit
-
-**Assumptions**: Character limit mentioned "30 letters", this is standardized to 30 characters including spaces in the count. 
-
-**Reason**: Standard practice for database fields include storing whitespaces. Input validation length function also includes whitespace in its count.
-
 ## Zeros or negative storage limit
 
 **Assumptions**: Fruit cannot be created with negative storage limit. Zero or more storage limit is allowed on initialization.
@@ -38,14 +26,6 @@ This document records the developer's assumptions according to app requirements.
 
 **Needs confirmation**: Yes.
 
-## Domain events
-
-**Assumption**: Pending outbox domain events are delivered to an internal application event bus through a transactional outbox publisher (audit handler).
-
-**Reason**:  The assignment requires at-least-once delivery but does not specify an external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
-
-**Needs consideration**: Delay, fault tolerance.
-
 ## Frontend behavior
 
 **Assumptions**: The frontend is a minimal single-page interface for listing, creating,
@@ -58,6 +38,15 @@ updating, deleting, storing, and removing fruits.
 **Assumptions**: REST and GraphQL expose the same command endpoints: CRUD, Store, and Remove.
 
 **Reason**: The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Even when store and remove are business commands rather than direct field updates, REST can expose them through dedicated command endpoints for feature consistency. Both GraphQL and REST would call the same application use cases. 
+
+## Inventory domain events
+
+**Decision**: Successful storage and removal operations record FruitStored and
+FruitRemoved events because they represent meaningful changes to the Fruit
+aggregate. Failed operations record no event.
+
+This extends the Entry Task's explicit create, update, and delete event
+requirements.
 
 ## Fruit creation requires complete input
 
@@ -77,3 +66,27 @@ requested replacement and is validated against the current stored amount.
 description, even though the mutation signature also lists the storage limit.
 
 **Needs confirmation**: Yes.
+
+## Confirmed Decisions
+
+**Source**: Follow-up response from interviewer
+
+### Fruit name uniqueness 
+
+**Assumptions**: Names are compared as case-insensitive after trimming (normalized)
+
+**Reason**: The strings "Lemon", "lemon", and " LeMon " are the same and should not create three definitions for the same fruit.
+
+### Character limit
+
+**Assumptions**: Character limit mentioned "30 letters", this is standardized to 30 characters including spaces in the count. 
+
+**Reason**: Standard practice for database fields include storing whitespaces. Input validation length function also includes whitespace in its count.
+
+### Domain events
+
+**Assumption**: Pending outbox domain events are delivered to an internal application event bus through a transactional outbox publisher (audit handler).
+
+**Reason**:  The assignment requires at-least-once delivery but does not specify an external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
+
+**Needs consideration**: Delay, fault tolerance.

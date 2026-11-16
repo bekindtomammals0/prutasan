@@ -10,6 +10,12 @@ This document records the developer's assumptions according to app requirements.
 
 **Reason**: Creating the fruit can start at zero storage limit, but amount removed and added from the fruit storage should always be greater than zero if storage limit permits, never negative.
 
+## Zero stored amount on initialization
+
+**Assumptions**: Creating a valid Fruit will start with zero stored amount.
+
+**Reason**: Command/mutation for creating a valid Fruit does not require a starting amount in storage.
+
 ## Reducing storage limit less than stored amount
 
 **Assumption**: Updating the storage limit to be less than the quantity stored will reject update request.
@@ -32,12 +38,6 @@ This document records the developer's assumptions according to app requirements.
 updating, deleting, storing, and removing fruits.
 
 **Reason**: No detailed frontend acceptance criteria are provided. The frontend should therefore be a thin interface demonstrating the backend domain behavior.
-
-## RESTfulness
-
-**Assumptions**: REST and GraphQL expose the same command endpoints: CRUD, Store, and Remove.
-
-**Reason**: The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Even when store and remove are business commands rather than direct field updates, REST can expose them through dedicated command endpoints for feature consistency. Both GraphQL and REST would call the same application use cases. 
 
 ## Inventory domain events
 
@@ -90,3 +90,9 @@ description, even though the mutation signature also lists the storage limit.
 **Reason**:  The assignment requires at-least-once delivery but does not specify an external receiver or message broker. An external broker could be overkill for this small exercise unless specified, but the event bus is abstracted for ease of external broker replacement.
 
 **Needs consideration**: Delay, fault tolerance.
+
+## RESTfulness
+
+**Assumptions**: REST and GraphQL expose the same command endpoints: CRUD, Store, and Remove.
+
+**Reason**: The initial REST interface is limited to CRUD because that is the scope explicitly stated in the test. Even when store and remove are business commands rather than direct field updates, REST can expose them through dedicated command endpoints for feature consistency. Both GraphQL and REST would call the same application use cases. 

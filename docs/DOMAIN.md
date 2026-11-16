@@ -55,5 +55,4 @@ All changes to these values occur through Fruit operations.
 ## Open Questions
 
 - Does amount represent individual pieces?
-- Can Storage Limit be reduced below Stored Amount?
 - Does force deletion represent discarding the remaining inventory?

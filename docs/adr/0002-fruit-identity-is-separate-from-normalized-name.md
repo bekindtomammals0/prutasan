@@ -4,15 +4,19 @@ The entry task requires every Fruit name to be unique, but it does not define wh
 
 Treating these inputs as different names could create multiple records representing the same kind of fruit. A decision is required about how names are compared and how uniqueness is protected during concurrent requests.
 
+Concurrently, a decision needs to be made on how this is stored in MongoDB whether to use the name as is, a normalized name, or a different unique ID.
+
 ## Decision
 
-Fruit names will be trimmed and compared case-sensitively.
+Firstly, Fruit names will be trimmed and compared case-insensitively.
 
 A FruitName value object will produce a normalized value used for lookup and uniqueness comparison. The original trimmed name may be retained for display, while the normalized value is used as the stable comparison value.
 
 Before creating a Fruit, the fruit-name uniqueness domain service will use the FruitRepository interface to determine whether the normalized name already exists.
 
-MongoDB will also enforce a unique index on the normalized name. The domain service provides an understandable business-level check, while the database index protects against concurrent requests that both pass the initial lookup.
+MongoDB will also enforce a unique index on the normalized name. An immutable id will be assigned to identify the fruit over time and is included in domain events. 
+
+The domain service provides an understandable business-level check, while the database index protects against concurrent requests that both pass the initial lookup.
 
 A duplicate-key database error will be translated into the same application error returned by the domain uniqueness check.
 

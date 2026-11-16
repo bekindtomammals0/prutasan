@@ -1,6 +1,6 @@
 ## Context
 
-Creating, updating, and deleting a Fruit must produce domain events with at-least-once delivery.
+Creating, updating, deleting, storing, and removing a Fruit must produce domain events with at-least-once delivery.
 
 Publishing an event directly before saving the Fruit could announce a change that later fails. Publishing after saving could lose the event if the Fruit is committed but publication fails or the application stops.
 
@@ -28,7 +28,7 @@ The required events are:
 - `FruitStored`; and
 - `FruitRemoved`.
 
-The eventual publication destination remains replaceable behind the event-publisher interface.
+The eventual publication destination remains replaceable behind the event-publisher interface. An external broker is not required for the baseline implementation.
 
 ## Considered alternatives
 
@@ -55,6 +55,10 @@ This was rejected because pending events would be lost when the application stop
 A database change stream could detect Fruit changes and detect events.
 
 This was not selected for the initial implementation because it adds operational complexity and makes explicitly recorded domain intent less visible.
+
+### 
+
+
 
 ## Consequences
 

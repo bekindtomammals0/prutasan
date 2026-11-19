@@ -1,0 +1,24 @@
+services:
+  mongodb:
+    image: mongo:8
+    command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --eval 'try { rs.status(); } catch (error) {
+          rs.initiate({_id: "rs0", members: [{_id: 0, host: "${MONGODB_REPLICA_SET_HOST:-localhost}:27017"}]});
+          quit(1);
+          }
+          quit(rs.status().myState === 1 ? 0 : 1);'
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+volumes:
+  mongodb-data:

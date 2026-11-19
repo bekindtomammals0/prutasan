@@ -343,7 +343,16 @@ Do not create empty files for every future class on the first day. Create each f
 3. Configure ESLint and formatting.
 4. Configure Jest.
 5. Configure environment validation for database and publisher settings.
-6. Configure MongoDB for transactions using a replica set, including integration tests.
+6. Configure MongoDB for transactions using a replica set, including idempotent
+   initialization from a fresh volume and integration tests. The hostname in
+   `MONGODB_URI` must be reachable by the test process and must match
+   `MONGODB_REPLICA_SET_HOST`, which MongoDB advertises to clients.
+   For host-run tests, export `MONGODB_REPLICA_SET_HOST=localhost` and use
+   `MONGODB_URI=mongodb://localhost:27017/fruit_storage?replicaSet=rs0`. Start
+   MongoDB with `docker compose -f backend/compose.yaml up -d --wait` so it is
+   initialized and primary before testing. For tests inside the Compose network,
+   set both values to use the `mongodb` hostname, and pass
+   `MONGODB_REPLICA_SET_HOST` to both Compose and the test runner.
 7. Add commands for linting, type checking, unit tests, integration tests, end-to-end tests, and builds.
 8. Add a pre-commit hook only after the commands are stable and reasonably fast.
 
@@ -358,7 +367,11 @@ Do not create empty files for every future class on the first day. Create each f
 
 - A deliberately failing Jest test is detected.
 - Lint and type-check commands run.
+- An integration test proves that writes to the temporary `phase0_fruits` and
+  `phase0_outbox` collections commit or roll back together, without defining
+  the Fruit schema.
 - The backend starts with an empty Fruit module.
+- MongoDB starts as a ready replica set from a fresh volume.
 - The frontend starts with a placeholder screen.
 
 ---
@@ -1131,4 +1144,3 @@ Explain:
 - why an outbox is used instead of direct publication;
 - why optimistic concurrency is required; and
 - what was deliberately kept simple because of assessment scope.
-

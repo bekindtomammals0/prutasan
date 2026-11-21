@@ -1,18 +1,19 @@
-import {randomUUID} from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import type { DomainEvent } from './domain-event';
-
+import { FruitDescription } from '../fruit-description';
+import { FruitName } from '../fruit-name';
 
 export type FruitCreated = DomainEvent<
   'FruitCreated',
   {
-    name: string;
+    name: FruitName;
   }
 >;
 
 export type FruitUpdated = DomainEvent<
   'FruitUpdated',
   {
-    description: string,
+    description: FruitDescription;
     storageLimit: number;
   }
 >;
@@ -20,7 +21,7 @@ export type FruitUpdated = DomainEvent<
 export type FruitDeleted = DomainEvent<
   'FruitDeleted',
   {
-    name: string;
+    name: FruitName;
     discardedAmount: number;
   }
 >;
@@ -42,11 +43,7 @@ export type FruitRemoved = DomainEvent<
 >;
 
 export type FruitDomainEvent =
-  | FruitCreated
-  | FruitUpdated
-  | FruitDeleted
-  | FruitStored
-  | FruitRemoved;
+  FruitCreated | FruitUpdated | FruitDeleted | FruitStored | FruitRemoved;
 
 type EventInput = {
   [Event in FruitDomainEvent as Event['eventType']]: Event['payload'];

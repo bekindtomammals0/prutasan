@@ -11,6 +11,7 @@
     "doc": "docs"
   },
   "scripts": {
+    "dev": "npm run dev --workspace frontend",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run lint --workspaces --if-present",

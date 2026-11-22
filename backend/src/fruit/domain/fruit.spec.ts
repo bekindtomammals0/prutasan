@@ -1,11 +1,8 @@
 import { Fruit, ReconstitutedFruit } from './fruit';
 import { FruitName } from './fruit-name';
 import { FruitDescription } from './fruit-description';
-import { ExitStatus } from 'typescript';
 
-function existingFruit(
-  overrides: Partial<ReconstitutedFruit> = {},
-): Fruit{
+function existingFruit(overrides: Partial<ReconstitutedFruit> = {}): Fruit {
   return Fruit.reconstitute({
     id: '1',
     name: FruitName.create('Apple'),
@@ -23,7 +20,7 @@ describe('Fruit', () => {
       const description = FruitDescription.create('A sweet fruit');
 
       const fruit = Fruit.createNew({
-        id:'1',
+        id: '1',
         name,
         description,
         storageLimit: 10,
@@ -48,6 +45,32 @@ describe('Fruit', () => {
     it('does not record FruitCreated when reconstituting an existing fruit', () => {
       const fruit = existingFruit();
       expect(fruit.pullDomainEvents()).toHaveLength(0);
+    });
+
+    it.each([-1, 1.5])(
+      'rejects an invalid storage limit of %s when creating a fruit',
+      (storageLimit) => {
+        expect(() =>
+          Fruit.createNew({
+            id: '1',
+            name: FruitName.create('Apple'),
+            description: FruitDescription.create('A sweet fruit'),
+            storageLimit,
+          }),
+        ).toThrow();
+      },
+    );
+  });
+
+  describe('reconstitute', () => {
+    it.each([
+      { storageLimit: -1, storedAmount: 0 },
+      { storageLimit: 1.5, storedAmount: 0 },
+      { storageLimit: 10, storedAmount: -1 },
+      { storageLimit: 10, storedAmount: 1.5 },
+      { storageLimit: 10, storedAmount: 11 },
+    ])('rejects invalid persisted numeric state: %o', (overrides) => {
+      expect(() => existingFruit(overrides)).toThrow();
     });
   });
   describe('store', () => {
@@ -111,7 +134,7 @@ describe('Fruit', () => {
       expect(fruit.storedAmount).toBe(5);
     });
     it('should reject non-integer remove amount', () => {
-      const fruit = existingFruit()
+      const fruit = existingFruit();
       expect(() => fruit.remove(1.5)).toThrow('Remove amount must be an integer');
       expect(fruit.storedAmount).toBe(5);
     });
@@ -144,25 +167,61 @@ describe('Fruit', () => {
       expect(fruit.storageLimit).toBe(10);
     });
     it('should reject description that is too long', () => {
-      const fruit = existingFruit({storageLimit: 5});
+      const fruit = existingFruit({ storageLimit: 5 });
+      const originalDescription = fruit.description;
+      const originalLimit = fruit.storageLimit;
+      const originalAmount = fruit.storedAmount;
+
       expect(() => {
         fruit.update(
           FruitDescription.create('This description is definitely longer than thirty characters.'),
           10,
         );
       }).toThrow('Description must be 30 characters or less');
+
+      expect(fruit.description.equals(originalDescription)).toBe(true);
+      expect(fruit.storageLimit).toBe(originalLimit);
+      expect(fruit.storedAmount).toBe(originalAmount);
+      expect(fruit.pullDomainEvents()).toHaveLength(0);
     });
-    it('should reject negative limit update', () => {
-      const fruit = existingFruit({storageLimit: 5});
+
+    it('should reject a negative limit without partially updating the description', () => {
+      const fruit = existingFruit({ storageLimit: 5 });
+      const originalDescription = fruit.description;
+      const originalLimit = fruit.storageLimit;
+      const originalAmount = fruit.storedAmount;
+
       expect(() => {
-        fruit.update(FruitDescription.create('A sweet fruit'), -1);
+        fruit.update(FruitDescription.create('A new description'), -1);
       }).toThrow('Storage limit should always be greater than 0');
+
+      expect(fruit.description.equals(originalDescription)).toBe(true);
+      expect(fruit.storageLimit).toBe(originalLimit);
+      expect(fruit.storedAmount).toBe(originalAmount);
+      expect(fruit.pullDomainEvents()).toHaveLength(0);
     });
+
     it('should reject storage limit less than stored amount', () => {
-      const fruit = existingFruit({storageLimit: 5});
+      const fruit = existingFruit({ storageLimit: 5 });
+      const originalDescription = fruit.description;
+      const originalLimit = fruit.storageLimit;
+      const originalAmount = fruit.storedAmount;
+
       expect(() => {
-        fruit.update(FruitDescription.create('A sweet fruit'), 4);
+        fruit.update(FruitDescription.create('A new description'), 4);
       }).toThrow('Storage limit should be greater than or equal to stored amount');
+
+      expect(fruit.description.equals(originalDescription)).toBe(true);
+      expect(fruit.storageLimit).toBe(originalLimit);
+      expect(fruit.storedAmount).toBe(originalAmount);
+      expect(fruit.pullDomainEvents()).toHaveLength(0);
+    });
+
+    it('should reject a non-integer storage limit', () => {
+      const fruit = existingFruit();
+      expect(() => fruit.update(FruitDescription.create('A new description'), 9.5)).toThrow(
+        'Storage limit must be an integer',
+      );
     });
     it('should allow updating storage limit to greater than or equal to stored amount', () => {
       const fruit = existingFruit();
@@ -192,21 +251,28 @@ describe('Fruit', () => {
   });
   describe('delete', () => {
     it('should allow deletion of empty fruit without forcing', () => {
-      const fruit = existingFruit({storedAmount: 0});
-      expect(() => fruit.verifyDeletionAllowed(false)).not.toThrow();
+      const fruit = existingFruit({ storedAmount: 0 });
+      fruit.verifyDeletionAllowed(false);
+
+      expect(fruit.pullDomainEvents()).toEqual([
+        expect.objectContaining({
+          eventType: 'FruitDeleted',
+          aggregateId: fruit.id,
+        }),
+      ]);
     });
     it('should reject deletion of non-empty fruit', () => {
-      const fruit = existingFruit({storedAmount: 1});
+      const fruit = existingFruit({ storedAmount: 1 });
       expect(() => fruit.verifyDeletionAllowed(false)).toThrow(
         'Fruit deletion is not allowed on non-emtpy storage',
       );
     });
     it('should allow deletion of non-empty fruit if forceDeletion is true', () => {
-      const fruit = existingFruit({storedAmount: 1});
+      const fruit = existingFruit({ storedAmount: 1 });
       expect(() => fruit.verifyDeletionAllowed(true)).not.toThrow();
     });
     it('records FruitDeleted when delete is allowed', () => {
-      const fruit = existingFruit({storedAmount: 1});
+      const fruit = existingFruit({ storedAmount: 1 });
       fruit.verifyDeletionAllowed(true);
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({

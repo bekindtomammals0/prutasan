@@ -164,7 +164,7 @@ export class Fruit {
     if (typeof forceDelete !== 'boolean') {
       throw new Error('Force delete must be a boolean');
     }
-    
+
     if (this._storedAmount > 0 && !forceDelete) {
       throw new Error('Fruit deletion is not allowed on non-emtpy storage');
     }

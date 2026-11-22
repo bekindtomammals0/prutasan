@@ -1,9 +1,10 @@
 import { FruitDescription } from './fruit-description';
+import { FruitId } from './fruit-id';
 import { FruitName } from './fruit-name';
 import { createFruitEvent, FruitDomainEvent } from './events/fruit-events';
 
 export type ReconstitutedFruit = {
-  id: string;
+  id: FruitId;
   name: FruitName;
   description: FruitDescription;
   storageLimit: number;
@@ -11,7 +12,7 @@ export type ReconstitutedFruit = {
 };
 
 export type NewFruit = {
-  id: string;
+  id: FruitId;
   name: FruitName;
   description: FruitDescription;
   storageLimit: number;
@@ -19,7 +20,7 @@ export type NewFruit = {
 
 export class Fruit {
   private constructor(
-    public readonly id: string,
+    public readonly id: FruitId,
     public readonly name: FruitName,
     private _description: FruitDescription,
     private _storageLimit: number,
@@ -53,7 +54,7 @@ export class Fruit {
     const fruit = new Fruit(state.id, state.name, state.description, state.storageLimit, 0);
 
     fruit.record(
-      createFruitEvent('FruitCreated', fruit.id, {
+      createFruitEvent('FruitCreated', fruit.id.value, {
         name: fruit.name,
       }),
     );
@@ -115,7 +116,7 @@ export class Fruit {
     this._storedAmount += amount;
 
     this.record(
-      createFruitEvent('FruitStored', this.id, {
+      createFruitEvent('FruitStored', this.id.value, {
         amount,
         storedAmount: this._storedAmount,
       }),
@@ -136,7 +137,7 @@ export class Fruit {
     this._storedAmount = this._storedAmount - amount;
 
     this.record(
-      createFruitEvent('FruitRemoved', this.id, {
+      createFruitEvent('FruitRemoved', this.id.value, {
         amount,
         storedAmount: this._storedAmount,
       }),
@@ -152,7 +153,7 @@ export class Fruit {
     this._storageLimit = storageLimit;
 
     this.record(
-      createFruitEvent('FruitUpdated', this.id, {
+      createFruitEvent('FruitUpdated', this.id.value, {
         description: this._description,
         storageLimit: this._storageLimit,
       }),
@@ -170,7 +171,7 @@ export class Fruit {
     }
 
     this.record(
-      createFruitEvent('FruitDeleted', this.id, {
+      createFruitEvent('FruitDeleted', this.id.value, {
         name: this.name,
         discardedAmount: this._storedAmount,
       }),

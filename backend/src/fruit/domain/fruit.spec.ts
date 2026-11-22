@@ -1,10 +1,11 @@
 import { Fruit, ReconstitutedFruit } from './fruit';
 import { FruitName } from './fruit-name';
 import { FruitDescription } from './fruit-description';
+import { FruitId } from './fruit-id';
 
 function existingFruit(overrides: Partial<ReconstitutedFruit> = {}): Fruit {
   return Fruit.reconstitute({
-    id: '1',
+    id: FruitId.create('1'),
     name: FruitName.create('Apple'),
     description: FruitDescription.create('A sweet fruit'),
     storageLimit: 10,
@@ -20,13 +21,13 @@ describe('Fruit', () => {
       const description = FruitDescription.create('A sweet fruit');
 
       const fruit = Fruit.createNew({
-        id: '1',
+        id: FruitId.create('1'),
         name,
         description,
         storageLimit: 10,
       });
 
-      expect(fruit.id).toBe('1');
+      expect(fruit.id.equals(FruitId.create('1'))).toBe(true);
       expect(fruit.name.equals(name)).toBe(true);
       expect(fruit.description.equals(description)).toBe(true);
       expect(fruit.storageLimit).toBe(10);
@@ -52,7 +53,7 @@ describe('Fruit', () => {
       (storageLimit) => {
         expect(() =>
           Fruit.createNew({
-            id: '1',
+            id: FruitId.create('1'),
             name: FruitName.create('Apple'),
             description: FruitDescription.create('A sweet fruit'),
             storageLimit,
@@ -102,7 +103,7 @@ describe('Fruit', () => {
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({
           eventType: 'FruitStored',
-          aggregateId: fruit.id,
+          aggregateId: fruit.id.value,
           payload: {
             amount: 5,
             storedAmount: 10,
@@ -144,7 +145,7 @@ describe('Fruit', () => {
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({
           eventType: 'FruitRemoved',
-          aggregateId: fruit.id,
+          aggregateId: fruit.id.value,
           payload: {
             amount: 5,
             storedAmount: 0,
@@ -235,7 +236,7 @@ describe('Fruit', () => {
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({
           eventType: 'FruitUpdated',
-          aggregateId: fruit.id,
+          aggregateId: fruit.id.value,
           payload: {
             description: FruitDescription.create('A sweet fruit'),
             storageLimit: 5,
@@ -257,7 +258,7 @@ describe('Fruit', () => {
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({
           eventType: 'FruitDeleted',
-          aggregateId: fruit.id,
+          aggregateId: fruit.id.value,
         }),
       ]);
     });
@@ -277,7 +278,7 @@ describe('Fruit', () => {
       expect(fruit.pullDomainEvents()).toEqual([
         expect.objectContaining({
           eventType: 'FruitDeleted',
-          aggregateId: fruit.id,
+          aggregateId: fruit.id.value,
           payload: expect.objectContaining({
             discardedAmount: 1,
           }),

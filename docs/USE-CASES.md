@@ -72,8 +72,8 @@ The supplied name identifies the existing fruit. This operation does not rename 
 - A fruit with the supplied normalized name exists.
 - At least one mutable field is supplied.
 - If a description is supplied, it contains no more than 30 characters.
-- If a new storage limit is supplied, it should be a non-negative integer.
-- If a new storage limit is supplied, it should be less than or equal to currently stored amount.
+- If a storage limit is supplied, it should be a non-negative integer.
+- If a storage limit is supplied, it should be greater than or equal to currently stored amount.
 - Neither mutable field is explicitly `null`.
 
 ### Success Flow

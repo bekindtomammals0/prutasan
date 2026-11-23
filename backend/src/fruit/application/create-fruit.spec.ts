@@ -18,6 +18,10 @@ describe('CreateFruit', () => {
 
     expect(fruit.name.displayName).toBe('Lemon');
     expect(fruit.name.normalizedName).toBe('lemon');
+    expect(fruit.storedAmount).toBe(0);
+    expect(fruit.pullDomainEvents()).toEqual([
+      expect.objectContaining({ eventType: 'FruitCreated', aggregateId: fruit.id.value }),
+    ]);
     expect(await repository.findByNormalizedName('lemon')).toEqual(
       expect.objectContaining({ id: fruit.id, name: fruit.name }),
     );
@@ -32,5 +36,19 @@ describe('CreateFruit', () => {
       createFruit.execute({ name: ' lemon ', description: 'Yellow', storageLimit: 20 }),
     ).rejects.toThrow(DuplicateFruitNameError);
     expect(await repository.list()).toHaveLength(1);
+  });
+
+  it('rejects an overlong description without saving a fruit', async () => {
+    const repository = new InMemoryFruitRepository();
+    const createFruit = new CreateFruit(repository, new FruitNameUniquenessService(repository));
+
+    await expect(
+      createFruit.execute({
+        name: 'Lemon',
+        description: 'This description is longer than thirty characters',
+        storageLimit: 10,
+      }),
+    ).rejects.toThrow('Description must be 30 characters or less');
+    expect(await repository.list()).toEqual([]);
   });
 });

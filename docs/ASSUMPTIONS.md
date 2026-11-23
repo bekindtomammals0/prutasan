@@ -52,7 +52,7 @@ requirements.
 
 Creating a fruit requires `name`, `description`, and `limitOfFruitToBeStored`. No creation field receives a default value.
 
-Unlike creation, updating a fruit supports partial modification: omitted mutable fields preserve their current values.
+Unlike creation, updating a fruit supports partial modification: omitted mutable fields preserve their current values. `description` therefore should be a non-empty string. 
 
 ## Partial fruit updates
 

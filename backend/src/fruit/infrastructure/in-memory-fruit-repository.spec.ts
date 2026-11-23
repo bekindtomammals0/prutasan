@@ -1,4 +1,4 @@
-import { FruitRepository } from '../application/fruit-repository';
+import { FruitRepository } from '../domain/fruit-repository';
 import { FruitFactory } from '../domain/fruit-factory';
 import { FruitId } from '../domain/fruit-id';
 import { FruitDescription } from '../domain/fruit-description';

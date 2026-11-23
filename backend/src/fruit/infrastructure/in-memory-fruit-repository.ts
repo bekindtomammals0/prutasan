@@ -1,4 +1,4 @@
-import { FruitRepository } from '../application/fruit-repository';
+import { FruitRepository } from '../domain/fruit-repository';
 import { Fruit, ReconstitutedFruit } from '../domain/fruit';
 
 export class InMemoryFruitRepository implements FruitRepository {

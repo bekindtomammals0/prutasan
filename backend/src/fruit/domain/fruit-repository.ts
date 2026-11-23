@@ -1,4 +1,4 @@
-import { Fruit } from '../domain/fruit';
+import { Fruit } from './fruit';
 
 export interface FruitRepository {
   findByNormalizedName(normalizedName: string): Promise<Fruit | null>;

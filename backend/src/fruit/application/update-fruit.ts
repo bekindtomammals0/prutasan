@@ -18,7 +18,7 @@ export class UpdateFruit {
     if (!fruit) {
       throw new Error(`Fruit "${name.displayName}" not found`);
     }
-    if((input.description === undefined) && (input.limit === undefined)){
+    if (input.description === undefined && input.limit === undefined) {
       throw new Error('Update cannot be performed without any changes to be made');
     }
     const description =

@@ -1,9 +1,9 @@
-import { Fruit } from "../domain/fruit";
-import { FruitId } from "../domain/fruit-id";
-import { FruitName } from "../domain/fruit-name";
-import { FruitDescription } from "../domain/fruit-description";
-import { InMemoryFruitRepository } from "../infrastructure/in-memory-fruit-repository"
-import { DeleteFruit } from "./delete-fruit";
+import { Fruit } from '../domain/fruit';
+import { FruitId } from '../domain/fruit-id';
+import { FruitName } from '../domain/fruit-name';
+import { FruitDescription } from '../domain/fruit-description';
+import { InMemoryFruitRepository } from '../infrastructure/in-memory-fruit-repository';
+import { DeleteFruit } from './delete-fruit';
 
 describe('DeleteFruit', () => {
   it('checks the normalized name, deletes fruit without stored amount through the repository', async () => {
@@ -17,7 +17,7 @@ describe('DeleteFruit', () => {
       storedAmount: 0,
     });
 
-    repository.save(existing);
+    await repository.save(existing);
 
     const deleteFruit = new DeleteFruit(repository);
 
@@ -40,14 +40,16 @@ describe('DeleteFruit', () => {
       storedAmount: 2,
     });
 
-    repository.save(existing);
+    await repository.save(existing);
 
     const deleteFruit = new DeleteFruit(repository);
 
-    await expect(deleteFruit.execute({
-      name: 'apple',
-      forceDelete: false,
-    })).rejects.toThrow('Fruit deletion is not allowed on non-emtpy storage');
+    await expect(
+      deleteFruit.execute({
+        name: 'apple',
+        forceDelete: false,
+      }),
+    ).rejects.toThrow('Fruit deletion is not allowed on non-emtpy storage');
   });
   it('deletes through repository when stored amount is not zero if force delete is true', async () => {
     const repository = new InMemoryFruitRepository();
@@ -60,7 +62,7 @@ describe('DeleteFruit', () => {
       storedAmount: 2,
     });
 
-    repository.save(existing);
+    await repository.save(existing);
 
     const deleteFruit = new DeleteFruit(repository);
 

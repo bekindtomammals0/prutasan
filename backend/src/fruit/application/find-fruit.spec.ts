@@ -4,6 +4,7 @@ import { FruitName } from '../domain/fruit-name';
 import { FruitDescription } from '../domain/fruit-description';
 import { InMemoryFruitRepository } from '../infrastructure/in-memory-fruit-repository';
 import { FindFruit } from './find-fruit';
+import { FruitNotFoundError } from './find-fruit-or-throw';
 
 describe('FindFruit', () => {
   it('returns existing fruit through repository', async () => {
@@ -35,7 +36,7 @@ describe('FindFruit', () => {
       findFruit.execute({
         name: 'apple',
       }),
-    ).rejects.toThrow('Fruit "apple" not found');
+    ).rejects.toThrow(FruitNotFoundError);
   });
   it('raises fruit not found after fruit deletion', async () => {
     const repository = new InMemoryFruitRepository();
@@ -61,6 +62,6 @@ describe('FindFruit', () => {
 
     await repository.delete(existing);
 
-    expect(await repository.findByNormalizedName('apple')).toBeNull();
+    await expect(findFruit.execute({ name: 'apple' })).rejects.toThrow(FruitNotFoundError);
   });
 });

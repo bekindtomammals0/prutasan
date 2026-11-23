@@ -8,9 +8,7 @@ export type StoreFruitInput = {
 };
 
 export class StoreFruit {
-  constructor(
-    private readonly repository: FruitRepository,
-  ) {}
+  constructor(private readonly repository: FruitRepository) {}
 
   async execute(input: StoreFruitInput): Promise<Fruit> {
     const name = FruitName.create(input.name);
@@ -19,7 +17,7 @@ export class StoreFruit {
     if (!fruit) {
       throw new Error(`Fruit "${name.displayName}" not found`);
     }
-    
+
     fruit.store(input.amount);
     await this.repository.save(fruit);
 

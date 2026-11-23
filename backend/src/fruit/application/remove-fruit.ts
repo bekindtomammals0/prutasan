@@ -8,9 +8,7 @@ export type RemoveFruitInput = {
 };
 
 export class RemoveFruit {
-  constructor(
-    private readonly repository: FruitRepository,
-  ) {}
+  constructor(private readonly repository: FruitRepository) {}
 
   async execute(input: RemoveFruitInput): Promise<Fruit> {
     const name = FruitName.create(input.name);
@@ -19,7 +17,7 @@ export class RemoveFruit {
     if (!fruit) {
       throw new Error(`Fruit "${name.displayName}" not found`);
     }
-    
+
     fruit.remove(input.amount);
     await this.repository.save(fruit);
 

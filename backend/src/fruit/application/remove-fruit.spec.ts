@@ -26,6 +26,13 @@ describe('RemoveFruit', () => {
 
     expect(fruit.id.equals(existing.id)).toBe(true);
     expect(fruit.storedAmount).toBe(0);
+    expect(fruit.pullDomainEvents()).toEqual([
+      expect.objectContaining({
+        eventType: 'FruitRemoved',
+        aggregateId: existing.id.value,
+        payload: { amount: 5, storedAmount: 0 },
+      }),
+    ]);
 
     const savedFruit = await repository.findByNormalizedName('apple');
     expect(savedFruit?.storedAmount).toBe(0);

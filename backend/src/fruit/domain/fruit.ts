@@ -75,7 +75,7 @@ export class Fruit {
     );
   }
 
-  // The aggregate should record events in-memory until persistence and outbox transactions commit successfully.
+  // Events remain pending until persistence and the outbox transaction commit.
   private readonly domainEvents: FruitDomainEvent[] = [];
 
   private record(event: FruitDomainEvent): void {
@@ -103,15 +103,7 @@ export class Fruit {
   }
 
   store(amount: number): void {
-    if (amount <= 0) {
-      throw new Error('Store amount must be greater than 0');
-    }
-    if (!Number.isInteger(amount)) {
-      throw new Error('Store amount must be an integer');
-    }
-    if (this._storedAmount + amount > this._storageLimit) {
-      throw new Error('Storage limit exceeded');
-    }
+    this.assertCanStore(amount);
 
     this._storedAmount += amount;
 
@@ -123,18 +115,22 @@ export class Fruit {
     );
   }
 
-  remove(amount: number): void {
-    if (this._storedAmount < amount) {
-      throw new Error('Remove amount should be less than stored amount');
-    }
+  private assertCanStore(amount: number): void {
     if (amount <= 0) {
-      throw new Error('Remove amount should be greater than 0');
+      throw new Error('Store amount must be greater than 0');
     }
     if (!Number.isInteger(amount)) {
-      throw new Error('Remove amount must be an integer');
+      throw new Error('Store amount must be an integer');
     }
+    if (this._storedAmount + amount > this._storageLimit) {
+      throw new Error('Storage limit exceeded');
+    }
+  }
 
-    this._storedAmount = this._storedAmount - amount;
+  remove(amount: number): void {
+    this.assertCanRemove(amount);
+
+    this._storedAmount -= amount;
 
     this.record(
       createFruitEvent('FruitRemoved', this.id.value, {
@@ -144,11 +140,21 @@ export class Fruit {
     );
   }
 
-  update(description: FruitDescription, storageLimit: number = this._storageLimit): void {
-    Fruit.assertValidStorageLimit(storageLimit);
-    if (storageLimit - this._storedAmount < 0) {
-      throw new Error('Storage limit should be greater than or equal to stored amount');
+  private assertCanRemove(amount: number): void {
+    if (this._storedAmount < amount) {
+      throw new Error('Remove amount should be less than stored amount');
     }
+    if (amount <= 0) {
+      throw new Error('Remove amount should be greater than 0');
+    }
+    if (!Number.isInteger(amount)) {
+      throw new Error('Remove amount must be an integer');
+    }
+  }
+
+  update(description: FruitDescription, storageLimit: number = this._storageLimit): void {
+    this.assertCanUpdate(storageLimit);
+
     this._description = description;
     this._storageLimit = storageLimit;
 
@@ -160,15 +166,15 @@ export class Fruit {
     );
   }
 
-  // Domain should not connect to MongoDB and repository but still contain the logic to verify whether deletion is allowed.
-  verifyDeletionAllowed(forceDelete: boolean): void {
-    if (typeof forceDelete !== 'boolean') {
-      throw new Error('Force delete must be a boolean');
+  private assertCanUpdate(storageLimit: number): void {
+    Fruit.assertValidStorageLimit(storageLimit);
+    if (storageLimit < this._storedAmount) {
+      throw new Error('Storage limit should be greater than or equal to stored amount');
     }
+  }
 
-    if (this._storedAmount > 0 && !forceDelete) {
-      throw new Error('Fruit deletion is not allowed on non-emtpy storage');
-    }
+  verifyDeletionAllowed(forceDelete: boolean): void {
+    this.assertCanDelete(forceDelete);
 
     this.record(
       createFruitEvent('FruitDeleted', this.id.value, {
@@ -176,5 +182,15 @@ export class Fruit {
         discardedAmount: this._storedAmount,
       }),
     );
+  }
+
+  private assertCanDelete(forceDelete: boolean): void {
+    if (typeof forceDelete !== 'boolean') {
+      throw new Error('Force delete must be a boolean');
+    }
+
+    if (this._storedAmount > 0 && !forceDelete) {
+      throw new Error('Fruit deletion is not allowed on non-emtpy storage');
+    }
   }
 }

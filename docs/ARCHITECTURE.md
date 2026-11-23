@@ -1,5 +1,20 @@
 # Fruit Storage Architecture
 
+## Document status
+
+The architecture described here was decided before implementation began. This
+overview was written on 2026-11-23, after the initial domain and in-memory
+repository work was merged. The earlier decisions are recorded in
+[`docs/adr/`](adr/); this document does not imply that every component is
+already implemented.
+
+As of this writing, the merged code includes the Fruit aggregate, value
+objects, factory, domain events, repository interface, and in-memory repository.
+The application use cases, REST and GraphQL adapters, Mongoose persistence,
+transactional outbox, event publisher, and frontend behavior described below
+are the intended design for later stages. The open questions in section 9
+remain unresolved.
+
 ## References
 
 ### Resources supplied with the entry task

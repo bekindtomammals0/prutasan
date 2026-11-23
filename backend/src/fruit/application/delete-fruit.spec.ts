@@ -4,6 +4,7 @@ import { FruitName } from '../domain/fruit-name';
 import { FruitDescription } from '../domain/fruit-description';
 import { InMemoryFruitRepository } from '../infrastructure/in-memory-fruit-repository';
 import { DeleteFruit } from './delete-fruit';
+import { FruitNotFoundError } from './find-fruit-or-throw';
 
 describe('DeleteFruit', () => {
   it('checks the normalized name, deletes fruit without stored amount through the repository', async () => {
@@ -27,6 +28,9 @@ describe('DeleteFruit', () => {
     });
 
     expect(fruit.id.equals(existing.id)).toBe(true);
+    expect(fruit.pullDomainEvents()).toEqual([
+      expect.objectContaining({ eventType: 'FruitDeleted', aggregateId: existing.id.value }),
+    ]);
     expect(await repository.findByNormalizedName('apple')).toBeNull();
   });
   it('rejects deletion through repository if stored amount is not zero', async () => {
@@ -72,6 +76,15 @@ describe('DeleteFruit', () => {
     });
 
     expect(fruit.id.equals(existing.id)).toBe(true);
+    expect(fruit.pullDomainEvents()).toEqual([
+      expect.objectContaining({ eventType: 'FruitDeleted', aggregateId: existing.id.value }),
+    ]);
     expect(await repository.findByNormalizedName('apple')).toBeNull();
+  });
+
+  it('rejects deletion of a missing fruit with a typed error', async () => {
+    await expect(
+      new DeleteFruit(new InMemoryFruitRepository()).execute({ name: 'apple', forceDelete: false }),
+    ).rejects.toThrow(FruitNotFoundError);
   });
 });

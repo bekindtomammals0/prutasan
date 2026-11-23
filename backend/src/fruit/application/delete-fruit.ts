@@ -1,6 +1,6 @@
 import { Fruit } from '../domain/fruit';
-import { FruitName } from '../domain/fruit-name';
 import { FruitRepository } from '../domain/fruit-repository';
+import { findFruitOrThrow } from './find-fruit-or-throw';
 
 export type DeleteFruitInput = {
   name: string;
@@ -11,12 +11,7 @@ export class DeleteFruit {
   constructor(private readonly repository: FruitRepository) {}
 
   async execute(input: DeleteFruitInput): Promise<Fruit> {
-    const name = FruitName.create(input.name);
-    const fruit = await this.repository.findByNormalizedName(name.normalizedName);
-
-    if (!fruit) {
-      throw new Error(`Fruit "${name.displayName}" not found`);
-    }
+    const fruit = await findFruitOrThrow(this.repository, input.name);
 
     fruit.verifyDeletionAllowed(input.forceDelete);
     await this.repository.delete(fruit);

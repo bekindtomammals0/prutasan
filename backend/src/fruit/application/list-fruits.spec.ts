@@ -37,5 +37,10 @@ describe('ListFruits', () => {
     const fruits = await listFruits.execute();
 
     expect(fruits).toHaveLength(3);
+    expect(fruits.map((fruit) => fruit.name.normalizedName)).toEqual(['apple', 'orange', 'mango']);
+  });
+
+  it('returns an empty list when the repository has no fruit', async () => {
+    expect(await new ListFruits(new InMemoryFruitRepository()).execute()).toEqual([]);
   });
 });
